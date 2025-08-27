@@ -54,14 +54,39 @@ jobs:
       run: ls -la ./artifacts/
     
     - name: Publish to NuGet
+      shell: pwsh
       run: |
-        for package in ./artifacts/*.nupkg; do
-          echo "Publishing $package"
-          dotnet nuget push "$package" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
-        done
+        foreach ($file in Get-ChildItem "./artifacts" -Recurse -Include *.nupkg) {
+          Write-Host "Processing package: $($file.Name)"
+          
+          if ($file.Name -like "Facet.Mapping.*.nupkg") {
+            Write-Host "Publishing Facet.Mapping package..."
+            dotnet nuget push $file `
+              --api-key "${{ secrets.NUGET_MAP_API_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } elseif ($file.Name -like "Facet.Extensions.EFCore.*.nupkg") {
+            Write-Host "Publishing Facet.Extensions.EFCore package..."
+            dotnet nuget push $file `
+              --api-key "${{ secrets.NUGET_API_KEY_EXTENSIONS_EF }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } elseif ($file.Name -like "Facet.Extensions.*.nupkg") {
+            Write-Host "Publishing Facet.Extensions package..."
+            dotnet nuget push $file `
+              --api-key "${{ secrets.NUGET_API_KEY_EXTENSIONS }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } elseif ($file.Name -like "Facet.*.nupkg") {
+            Write-Host "Publishing Facet package..."
+            dotnet nuget push $file `
+              --api-key "${{ secrets.NUGET_API_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } else {
+            Write-Host "Skipping unknown package: $($file.Name)"
+          }
+        }
     
     - name: Commit version update
       run: |
