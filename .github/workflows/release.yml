@@ -15,6 +15,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -92,6 +95,20 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add Directory.Build.props
-        git commit -m "Bump version to ${{ steps.get_version.outputs.VERSION }}" || exit 0
-        git push
+        
+        # Check if we're on a detached HEAD and create/switch to master branch
+        if git symbolic-ref HEAD >/dev/null 2>&1; then
+          echo "On branch, proceeding with commit"
+        else
+          echo "Detached HEAD detected, switching to master branch"
+          git checkout -B master
+        fi
+        
+        # Only commit if there are changes
+        if git diff --quiet Directory.Build.props; then
+          echo "No changes to commit"
+        else
+          git add Directory.Build.props
+          git commit -m "Bump version to ${{ steps.get_version.outputs.VERSION }}"
+          git push origin master
+        fi
