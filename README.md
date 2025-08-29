@@ -226,6 +226,9 @@ if (result.HasChanges)
 
 ## Mapping benchmarks
 
+A quick comparison of Facet's mapping performance against other popular libraries like Mapster and Mapperly.
+
+
 | Method                             | Job        | IterationCount | RunStrategy | UnrollFactor | WarmupCount | Mean         | Error            | StdDev        | Ratio | RatioSD | Allocated | Alloc Ratio |
 |----------------------------------- |----------- |--------------- |------------ |------------- |------------ |-------------:|-----------------:|--------------:|------:|--------:|----------:|------------:|
 | 'Facet - Single Mapping'           | Job-JLMADU | 2              | Monitoring  | 1            | 1           |  3,300.00 ns | 1,018,590.803 ns |  2,262.742 ns |  1.31 |    1.09 |     536 B |        1.00 |
