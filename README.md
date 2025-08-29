@@ -223,3 +223,21 @@ if (result.HasChanges)
         user.Id, string.Join(", ", result.ChangedProperties));
 }
 ```
+
+## Mapping benchmarks
+
+| Method                             | Job        | IterationCount | RunStrategy | UnrollFactor | WarmupCount | Mean         | Error            | StdDev        | Ratio | RatioSD | Allocated | Alloc Ratio |
+|----------------------------------- |----------- |--------------- |------------ |------------- |------------ |-------------:|-----------------:|--------------:|------:|--------:|----------:|------------:|
+| 'Facet - Single Mapping'           | Job-JLMADU | 2              | Monitoring  | 1            | 1           |  3,300.00 ns | 1,018,590.803 ns |  2,262.742 ns |  1.31 |    1.09 |     536 B |        1.00 |
+| 'Mapster - Single Mapping'         | Job-JLMADU | 2              | Monitoring  | 1            | 1           |  4,550.00 ns |   795,774.065 ns |  1,767.767 ns |  1.80 |    1.19 |     528 B |        0.99 |
+| 'Mapperly - Single Mapping'        | Job-JLMADU | 2              | Monitoring  | 1            | 1           |  1,600.00 ns |    63,661.925 ns |    141.421 ns |  0.63 |    0.36 |     528 B |        0.99 |
+| 'Facet - Collection (10 items)'    | Job-JLMADU | 2              | Monitoring  | 1            | 1           | 12,750.00 ns | 4,806,475.352 ns | 10,677.312 ns |  5.05 |    4.77 |    1968 B |        3.67 |
+| 'Mapster - Collection (10 items)'  | Job-JLMADU | 2              | Monitoring  | 1            | 1           |  4,650.00 ns |   541,126.364 ns |  1,202.082 ns |  1.84 |    1.12 |    1816 B |        3.39 |
+| 'Mapperly - Collection (10 items)' | Job-JLMADU | 2              | Monitoring  | 1            | 1           | 16,700.00 ns | 6,557,178.295 ns | 14,566.400 ns |  6.62 |    6.41 |    1952 B |        3.64 |
+|                                    |            |                |             |              |             |              |                  |               |       |         |           |             |
+| 'Facet - Single Mapping'           | Job-UKTOPU | Default        | Default     | 16           | Default     |     15.93 ns |         0.355 ns |      0.449 ns |  1.00 |    0.04 |     136 B |        1.00 |
+| 'Mapster - Single Mapping'         | Job-UKTOPU | Default        | Default     | 16           | Default     |     21.90 ns |         0.475 ns |      0.949 ns |  1.38 |    0.07 |     128 B |        0.94 |
+| 'Mapperly - Single Mapping'        | Job-UKTOPU | Default        | Default     | 16           | Default     |     15.09 ns |         0.340 ns |      0.848 ns |  0.95 |    0.06 |     128 B |        0.94 |
+| 'Facet - Collection (10 items)'    | Job-UKTOPU | Default        | Default     | 16           | Default     |    207.32 ns |         4.182 ns |     10.180 ns | 13.03 |    0.73 |    1568 B |       11.53 |
+| 'Mapster - Collection (10 items)'  | Job-UKTOPU | Default        | Default     | 16           | Default     |    192.55 ns |         4.313 ns |     12.512 ns | 12.10 |    0.85 |    1416 B |       10.41 |
+| 'Mapperly - Collection (10 items)' | Job-UKTOPU | Default        | Default     | 16           | Default     |    222.50 ns |         4.490 ns |      9.568 ns | 13.98 |    0.71 |    1552 B |       11.41 |
