@@ -89,7 +89,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark(Baseline = true)]
     public UserBasicDto FacetUserBasic()
     {
-        return _user.ToFacet<User, UserBasicDto>();
+        return _user.ToFacet<UserBasicDto>();
     }
 
     [Benchmark]
@@ -107,7 +107,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public UserDetailedDto FacetUserDetailed()
     {
-        return _user.ToFacet<User, UserDetailedDto>();
+        return _user.ToFacet<UserDetailedDto>();
     }
 
     [Benchmark]
@@ -125,7 +125,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public UserSimpleDto FacetUserSimple()
     {
-        return _user.ToFacet<User, UserSimpleDto>();
+        return _user.ToFacet<UserSimpleDto>();
     }
 
     [Benchmark]
@@ -147,7 +147,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public ProductDto FacetProduct()
     {
-        return _product.ToFacet<Product, ProductDto>();
+        return _product.ToFacet<ProductDto>();
     }
 
     [Benchmark]
@@ -165,7 +165,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public ProductSimpleDto FacetProductSimple()
     {
-        return _product.ToFacet<Product, ProductSimpleDto>();
+        return _product.ToFacet<ProductSimpleDto>();
     }
 
     [Benchmark]
@@ -187,7 +187,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public AddressDto FacetAddress()
     {
-        return _address.ToFacet<Address, AddressDto>();
+        return _address.ToFacet<AddressDto>();
     }
 
     [Benchmark]
@@ -205,7 +205,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public OrderDto FacetOrder()
     {
-        return _order.ToFacet<Order, OrderDto>();
+        return _order.ToFacet<OrderDto>();
     }
 
     [Benchmark]
@@ -223,7 +223,7 @@ public class SingleEntityMappingBenchmark
     [Benchmark]
     public CategoryDto FacetCategory()
     {
-        return _category.ToFacet<Category, CategoryDto>();
+        return _category.ToFacet<CategoryDto>();
     }
 
     [Benchmark]

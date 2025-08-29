@@ -40,7 +40,7 @@ public class SuperQuickBenchmark
     [Benchmark(Baseline = true, Description = "Facet - Single Mapping")]
     public UserBasicDto FacetSingle()
     {
-        return _user.ToFacet<User, UserBasicDto>();
+        return _user.ToFacet<UserBasicDto>();
     }
 
     [Benchmark(Description = "Mapster - Single Mapping")]
@@ -58,7 +58,7 @@ public class SuperQuickBenchmark
     [Benchmark(Description = "Facet - Collection (10 items)")]
     public List<UserBasicDto> FacetCollection()
     {
-        return _users.Select(u => u.ToFacet<User, UserBasicDto>()).ToList();
+        return _users.Select(u => u.ToFacet<UserBasicDto>()).ToList();
     }
 
     [Benchmark(Description = "Mapster - Collection (10 items)")]

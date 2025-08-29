@@ -69,7 +69,7 @@ public class CollectionMappingBenchmark
     [Arguments(10)]
     public List<UserBasicDto> FacetUsers10Basic()
     {
-        return _users10.Select(u => u.ToFacet<User, UserBasicDto>()).ToList();
+        return _users10.Select(u => u.ToFacet<UserBasicDto>()).ToList();
     }
 
     [Benchmark]
@@ -90,7 +90,7 @@ public class CollectionMappingBenchmark
     [Arguments(10)]
     public List<UserSimpleDto> FacetUsers10Simple()
     {
-        return _users10.Select(u => u.ToFacet<User, UserSimpleDto>()).ToList();
+        return _users10.Select(u => u.ToFacet<UserSimpleDto>()).ToList();
     }
 
     [Benchmark]
@@ -115,7 +115,7 @@ public class CollectionMappingBenchmark
     [Arguments(100)]
     public List<UserBasicDto> FacetUsers100Basic()
     {
-        return _users100.Select(u => u.ToFacet<User, UserBasicDto>()).ToList();
+        return _users100.Select(u => u.ToFacet<UserBasicDto>()).ToList();
     }
 
     [Benchmark]
@@ -136,7 +136,7 @@ public class CollectionMappingBenchmark
     [Arguments(100)]
     public List<UserSimpleDto> FacetUsers100Simple()
     {
-        return _users100.Select(u => u.ToFacet<User, UserSimpleDto>()).ToList();
+        return _users100.Select(u => u.ToFacet<UserSimpleDto>()).ToList();
     }
 
     [Benchmark]
@@ -161,7 +161,7 @@ public class CollectionMappingBenchmark
     [Arguments(1000)]
     public List<UserBasicDto> FacetUsers1000Basic()
     {
-        return _users1000.Select(u => u.ToFacet<User, UserBasicDto>()).ToList();
+        return _users1000.Select(u => u.ToFacet<UserBasicDto>()).ToList();
     }
 
     [Benchmark]
@@ -182,7 +182,7 @@ public class CollectionMappingBenchmark
     [Arguments(1000)]
     public List<UserSimpleDto> FacetUsers1000Simple()
     {
-        return _users1000.Select(u => u.ToFacet<User, UserSimpleDto>()).ToList();
+        return _users1000.Select(u => u.ToFacet<UserSimpleDto>()).ToList();
     }
 
     [Benchmark]
@@ -207,7 +207,7 @@ public class CollectionMappingBenchmark
     [Arguments(100)]
     public List<ProductDto> FacetProducts100()
     {
-        return _products100.Select(p => p.ToFacet<Product, ProductDto>()).ToList();
+        return _products100.Select(p => p.ToFacet<ProductDto>()).ToList();
     }
 
     [Benchmark]
@@ -228,7 +228,7 @@ public class CollectionMappingBenchmark
     [Arguments(100)]
     public List<ProductSimpleDto> FacetProducts100Simple()
     {
-        return _products100.Select(p => p.ToFacet<Product, ProductSimpleDto>()).ToList();
+        return _products100.Select(p => p.ToFacet<ProductSimpleDto>()).ToList();
     }
 
     [Benchmark]
@@ -253,7 +253,7 @@ public class CollectionMappingBenchmark
     [Arguments(1000)]
     public List<ProductDto> FacetProducts1000()
     {
-        return _products1000.Select(p => p.ToFacet<Product, ProductDto>()).ToList();
+        return _products1000.Select(p => p.ToFacet<ProductDto>()).ToList();
     }
 
     [Benchmark]
@@ -274,7 +274,7 @@ public class CollectionMappingBenchmark
     [Arguments(1000)]
     public List<ProductSimpleDto> FacetProducts1000Simple()
     {
-        return _products1000.Select(p => p.ToFacet<Product, ProductSimpleDto>()).ToList();
+        return _products1000.Select(p => p.ToFacet<ProductSimpleDto>()).ToList();
     }
 
     [Benchmark]

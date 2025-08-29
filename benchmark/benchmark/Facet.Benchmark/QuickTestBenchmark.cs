@@ -35,7 +35,7 @@ public class QuickTestBenchmark
     [Benchmark(Baseline = true)]
     public UserBasicDto FacetMapping()
     {
-        return _user.ToFacet<User, UserBasicDto>();
+        return _user.ToFacet<UserBasicDto>();
     }
 
     [Benchmark]

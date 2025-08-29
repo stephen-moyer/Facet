@@ -60,7 +60,7 @@ public class QuickComparisonBenchmark
     [Benchmark(Baseline = true, Description = "Facet single user mapping")]
     public UserBasicDto FacetUserBasic()
     {
-        return _user.ToFacet<User, UserBasicDto>();
+        return _user.ToFacet<UserBasicDto>();
     }
 
     [Benchmark(Description = "Mapster single user mapping")]
@@ -78,7 +78,7 @@ public class QuickComparisonBenchmark
     [Benchmark(Description = "Facet single product mapping")]
     public ProductDto FacetProduct()
     {
-        return _product.ToFacet<Product, ProductDto>();
+        return _product.ToFacet<ProductDto>();
     }
 
     [Benchmark(Description = "Mapster single product mapping")]
@@ -100,7 +100,7 @@ public class QuickComparisonBenchmark
     [Benchmark(Description = "Facet 25 users collection mapping")]
     public List<UserBasicDto> FacetUsers25()
     {
-        return _users.Select(u => u.ToFacet<User, UserBasicDto>()).ToList();
+        return _users.Select(u => u.ToFacet<UserBasicDto>()).ToList();
     }
 
     [Benchmark(Description = "Mapster 25 users collection mapping")]
@@ -118,7 +118,7 @@ public class QuickComparisonBenchmark
     [Benchmark(Description = "Facet 25 products collection mapping")]
     public List<ProductDto> FacetProducts25()
     {
-        return _products.Select(p => p.ToFacet<Product, ProductDto>()).ToList();
+        return _products.Select(p => p.ToFacet<ProductDto>()).ToList();
     }
 
     [Benchmark(Description = "Mapster 25 products collection mapping")]
@@ -142,7 +142,7 @@ public class QuickComparisonBenchmark
     {
         return _users.AsQueryable()
             .Where(u => u.IsActive)
-            .Select(u => u.ToFacet<User, UserBasicDto>())
+            .Select(u => u.ToFacet<UserBasicDto>())
             .ToList();
     }
 
