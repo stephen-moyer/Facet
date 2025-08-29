@@ -244,10 +244,9 @@ Facet delivers competitive performance across different mapping scenarios. Here'
 | **Facet** | 207.32 ns | 1,568 B | **Baseline** |
 | Mapperly | 222.50 ns | 1,552 B | 7% slower, 1% less memory |
 
-> **Insights:**
+**Insights:**
 > - **Single mapping**: All three libraries perform similarly with sub-nanosecond differences
 > - **Collection mapping**: Mapster has a slight edge for bulk operations, while Facet and Mapperly are very close
 > - **Memory efficiency**: All libraries are within ~10% of each other for memory allocation
 > - **Compile-time generation**: Both Facet and Mapperly benefit from zero-runtime-cost source generation
 
-*Benchmarks run on .NET 8 using BenchmarkDotNet. Results may vary based on hardware and specific use cases.*
