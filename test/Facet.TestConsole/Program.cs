@@ -3,6 +3,7 @@ using Facet.Mapping;
 using Facet.TestConsole.Data;
 using Facet.TestConsole.Services;
 using Facet.TestConsole.Tests;
+using Facet.TestConsole.GenerateDtosTests; // Add this using
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -295,15 +296,17 @@ class Program
         {
             await InitializeDatabaseAsync(host);
 
+            await RunGenerateDtosTests(host);
+
             await RunTests();
 
             await RunEfCoreTests(host);
 
-            // Run the record primary constructor tests
             RecordPrimaryConstructorTests.RunAllTests();
 
-            // Run the parameterless constructor tests
             ParameterlessConstructorTests.RunAllTests();
+
+            EnumHandlingTests.RunAllTests();
         }
         catch (Exception ex)
         {
@@ -356,6 +359,7 @@ class Program
                 services.AddScoped<UpdateFromFacetTests>();
                 services.AddScoped<EfCoreIntegrationTests>();
                 services.AddScoped<ValidationAndErrorTests>();
+                services.AddScoped<GenerateDtosFeatureTests>();
 
                 // Add logging
                 services.AddLogging(builder =>
@@ -400,6 +404,31 @@ class Program
 
         var validationAndErrorTests = scope.ServiceProvider.GetRequiredService<ValidationAndErrorTests>();
         await validationAndErrorTests.RunAllTestsAsync();
+    }
+
+    static async Task RunGenerateDtosTests(IHost host)
+    {
+        Console.WriteLine("\n" + "=".PadRight(60, '='));
+        Console.WriteLine("GENERATE DTOS FEATURE TESTS");
+        Console.WriteLine("=".PadRight(60, '='));
+
+        try
+        {
+            using var scope = host.Services.CreateScope();
+            
+            Console.WriteLine("Resolving GenerateDtosFeatureTests service...");
+            var generateDtosTests = scope.ServiceProvider.GetRequiredService<GenerateDtosFeatureTests>();
+            Console.WriteLine("Service resolved successfully. Running tests...");
+            
+            await generateDtosTests.RunAllTestsAsync();
+            
+            Console.WriteLine("GenerateDtos tests completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR in RunGenerateDtosTests: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
     }
 
     static async Task RunTests()
@@ -870,9 +899,9 @@ class Program
 
         try
         {
-            // Test that parameterless constructors work by default now
-            var userDto = new UserDto(); // No explicit GenerateParameterlessConstructor needed!
-            Console.WriteLine($"? Successfully created UserDto() - parameterless constructor enabled by default!");
+            // Test that parameterless constructors work by default
+            var userDto = new UserDto();
+            Console.WriteLine($"SUCCESS: Successfully created UserDto() - parameterless constructor enabled by default!");
             Console.WriteLine($"  Properties initialized with defaults:");
             Console.WriteLine($"    Id: {userDto.Id}");
             Console.WriteLine($"    FirstName: '{userDto.FirstName}'");
@@ -891,7 +920,7 @@ class Program
             userDto.Age = 25;
             userDto.IsActive = true;
 
-            Console.WriteLine($"? Successfully set properties after parameterless construction:");
+            Console.WriteLine($"SUCCESS: Successfully set properties after parameterless construction:");
             Console.WriteLine($"    FirstName: '{userDto.FirstName}'");
             Console.WriteLine($"    LastName: '{userDto.LastName}'");
             Console.WriteLine($"    Email: '{userDto.Email}'");
@@ -902,7 +931,7 @@ class Program
 
             // Test record with parameterless constructor 
             var productDto = new ProductDto(); // Record also gets parameterless constructor
-            Console.WriteLine($"? Successfully created ProductDto() record - parameterless constructor enabled by default!");
+            Console.WriteLine($"SUCCESS: Successfully created ProductDto() record - parameterless constructor enabled by default!");
             Console.WriteLine($"  Properties initialized with defaults:");
             Console.WriteLine($"    Id: {productDto.Id}");
             Console.WriteLine($"    Name: '{productDto.Name}'");
@@ -913,7 +942,7 @@ class Program
             Console.WriteLine();
 
             // Test unit testing scenario
-            Console.WriteLine("? Unit Testing Scenario:");
+            Console.WriteLine("SUCCESS: Unit Testing Scenario:");
             var testDto = new UserDto(); // Simple!
             testDto.FirstName = "Unit";
             testDto.LastName = "Test";
@@ -921,11 +950,11 @@ class Program
             Console.WriteLine($"    Created and populated DTO for testing: {testDto.FirstName} {testDto.LastName}, Active: {testDto.IsActive}");
             Console.WriteLine();
 
-            Console.WriteLine("? Parameterless constructor feature tests completed successfully!");
+            Console.WriteLine("SUCCESS: Parameterless constructor feature tests completed successfully!");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"? Error in TestParameterlessConstructors: {ex.Message}");
+            Console.WriteLine($"ERROR: Error in TestParameterlessConstructors: {ex.Message}");
             Console.WriteLine($"  Stack trace: {ex.StackTrace}");
         }
         Console.WriteLine();
