@@ -50,7 +50,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Test
+    - name: Run Unit Tests
       run: dotnet test --configuration Release --no-build --verbosity normal
     
     - name: Pack NuGet packages
