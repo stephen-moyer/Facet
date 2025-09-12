@@ -12,6 +12,7 @@ Welcome to the Facet documentation! This index will help you navigate all availa
 - [Advanced Scenarios](06_AdvancedScenarios.md): Advanced Usage Scenarios
 - [What is Being Generated?](07_WhatIsBeingGenerated.md): Before/After Examples
 - [Async Mapping Guide](08_AsyncMapping.md): Asynchronous Mapping with Facet.Mapping
+- [GenerateDtos Attribute](09_GenerateDtosAttribute.md): Auto-generate CRUD DTOs with GenerateDtos & GenerateAuditableDtos
 - [Facet.Extensions.EFCore](../src/Facet.Extensions.EFCore/README.md): EF Core Async Extension Methods
 - [Facet.Mapping Reference](../src/Facet.Mapping/README.md): Complete Facet.Mapping Documentation
 
@@ -22,7 +23,7 @@ Welcome to the Facet documentation! This index will help you navigate all availa
 [Facet(typeof(User))]
 public partial class UserDto { }
 
-var userDto = user.ToFacet<User, UserDto>();
+var userDto = user.ToFacet<UserDto>();
 ```
 
 ### Custom Sync Mapping
@@ -46,4 +47,4 @@ public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
     }
 }
 
-var userDto = await user.ToFacetAsync<User, UserDto, UserAsyncMapper>();
+var userDto = await user.ToFacetAsync<UserDto, UserAsyncMapper>();
