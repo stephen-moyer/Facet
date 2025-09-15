@@ -361,6 +361,8 @@ Facet delivers competitive performance across different mapping scenarios. Here'
 | **Facet** | 207.32 ns | 1,568 B | **Baseline** |
 | Mapperly | 222.50 ns | 1,552 B | 7% slower, 1% less memory |
 
+For this benchmark we used the `<TSource, TTarget>` methods. 
+
 **Insights:**
 > - **Single mapping**: All three libraries perform similarly with sub-nanosecond differences
 > - **Collection mapping**: Mapster has a slight edge for bulk operations, while Facet and Mapperly are very close
