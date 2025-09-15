@@ -106,7 +106,9 @@ public partial class UserFacet { }
 
 // Auto-generates constructor, properties, and LINQ projection
 var user = user.ToFacet<UserFacet>();
+var user = user.ToFacet<User, UserFacet>(); //Much faster
 var users = users.SelectFacets<UserFacet>();
+var users = users.SelectFacets<User, UserFacet>(); //Much faster
 ```
 
 ### Property Exclusion & Field Inclusion
