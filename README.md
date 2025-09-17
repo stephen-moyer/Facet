@@ -105,8 +105,11 @@ dotnet add package Facet.Mapping.Expressions
 public partial class UserFacet { }
 
 // Auto-generates constructor, properties, and LINQ projection
-var user = user.ToFacet<UserFacet>();
-var user = user.ToFacet<User, UserFacet>(); //Much faster
+var userFacet = user.ToFacet<UserFacet>();
+var userFacet = user.ToFacet<User, UserFacet>(); //Much faster
+
+var user = userFacet.BackTo<User>();
+var user = userFacet.BackTo<UserFacet, User>(); //Much faster
 
 var users = users.SelectFacets<UserFacet>();
 var users = users.SelectFacets<User, UserFacet>(); //Much faster

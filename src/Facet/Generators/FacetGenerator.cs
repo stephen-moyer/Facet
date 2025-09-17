@@ -148,6 +148,9 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
         // Check if the target type already has a primary constructor
         var hasExistingPrimaryConstructor = HasExistingPrimaryConstructor(targetSymbol);
+        
+        // Check if the source type has a positional constructor
+        var hasPositionalConstructor = HasPositionalConstructor(sourceType);
 
         return new FacetTargetModel(
             targetSymbol.Name,
@@ -161,6 +164,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
             configurationTypeName,
             members.ToImmutableArray(),
             hasExistingPrimaryConstructor,
+            hasPositionalConstructor,
             typeXmlDocumentation,
             containingTypes,
             useFullName);
@@ -194,6 +198,37 @@ public sealed class FacetGenerator : IIncrementalGenerator
         {
             // Look at the syntax to see if it has primary constructor parameters
             var syntaxRef = targetSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if (syntaxRef != null)
+            {
+                var syntax = syntaxRef.GetSyntax();
+
+                // Check for record with parameter list
+                if (syntax is RecordDeclarationSyntax recordDecl && recordDecl.ParameterList != null && recordDecl.ParameterList.Parameters.Count > 0)
+                {
+                    return true;
+                }
+
+                // Check for regular class/struct with primary constructor (C# 12+)
+                if ((syntax is ClassDeclarationSyntax classDecl && classDecl.ParameterList != null && classDecl.ParameterList.Parameters.Count > 0) ||
+                    (syntax is StructDeclarationSyntax structDecl && structDecl.ParameterList != null && structDecl.ParameterList.Parameters.Count > 0))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the source type has a positional constructor (like records with primary constructors).
+    /// </summary>
+    private static bool HasPositionalConstructor(INamedTypeSymbol sourceType)
+    {
+        if (sourceType.TypeKind == TypeKind.Class || sourceType.TypeKind == TypeKind.Struct)
+        {
+            // Look at the syntax to see if it has primary constructor parameters
+            var syntaxRef = sourceType.DeclaringSyntaxReferences.FirstOrDefault();
             if (syntaxRef != null)
             {
                 var syntax = syntaxRef.GetSyntax();
@@ -581,6 +616,9 @@ public sealed class FacetGenerator : IIncrementalGenerator
             }
         }
 
+        // Generate reverse mapping method (BackTo)
+        GenerateBackToMethod(sb, model);
+        
         sb.AppendLine($"{containingTypeIndent}}}");
 
         // Close containing type braces
@@ -903,4 +941,35 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
         return null;
     }
+
+    private static void GenerateBackToMethod(StringBuilder sb, FacetTargetModel model)
+    {
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    /// Converts this instance of <see cref=\"{model.Name}\"/> to an instance of the source type.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine($"    /// <returns>An instance of the source type with properties mapped from this instance.</returns>");
+        sb.AppendLine($"    public {model.SourceTypeName} BackTo()");
+        sb.AppendLine("    {");
+
+        if (model.SourceHasPositionalConstructor)
+        {
+            // For source types with positional constructors (like records), use positional syntax
+            var constructorArgs = string.Join(", ", model.Members.Select(m => $"this.{m.Name}"));
+            sb.AppendLine($"        return new {model.SourceTypeName}({constructorArgs});");
+        }
+        else
+        {
+            // For source types without positional constructors, use object initializer syntax
+            sb.AppendLine($"        return new {model.SourceTypeName}");
+            sb.AppendLine("        {");
+            var propertyAssignments = model.Members
+                .Select(m => $"            {m.Name} = this.{m.Name}");
+            sb.AppendLine(string.Join(",\n", propertyAssignments));
+            sb.AppendLine("        };");
+        }
+
+        sb.AppendLine("    }");
+    }
 }
+
