@@ -128,21 +128,6 @@ public partial class UserWithoutEmail { }
 public partial class EntityDto { }
 ```
 
-### Different Type Kinds
-```csharp
-// Generate as record (immutable by default)
-[Facet(typeof(Product))]
-public partial record ProductDto;
-
-// Generate as struct (value type)
-[Facet(typeof(Point))]
-public partial struct PointDto;
-
-// Generate as record struct (immutable value type)
-[Facet(typeof(Coordinates))]
-public partial record struct CoordinatesDto; // Preserves required/init-only
-```
-
 ### Custom Sync Mapping
 ```csharp
 public class UserMapper : IFacetMapConfiguration<User, UserDto>
