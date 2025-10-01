@@ -100,22 +100,6 @@ For expression transformation utilities:
 dotnet add package Facet.Mapping.Expressions
 ```
 
-### Basic Projection
-```csharp
-[Facet(typeof(User))]
-public partial class UserFacet { }
-
-// Auto-generates constructor, properties, and LINQ projection
-var userFacet = user.ToFacet<UserFacet>();
-var userFacet = user.ToFacet<User, UserFacet>(); //Much faster
-
-var user = userFacet.BackTo<User>();
-var user = userFacet.BackTo<UserFacet, User>(); //Much faster
-
-var users = users.SelectFacets<UserFacet>();
-var users = users.SelectFacets<User, UserFacet>(); //Much faster
-```
-
 ### Property Exclusion & Field Inclusion
 ```csharp
 // Exclude sensitive properties
@@ -135,6 +119,22 @@ public partial class EntityDto { }
 // Include specific fields and properties 
 [Facet(typeof(Entity), Include = new[] { "Name", "Status" }, IncludeFields = true)]
 public partial class EntitySummaryDto { }
+```
+
+### Basic Projection of Facets
+```csharp
+[Facet(typeof(User))]
+public partial class UserFacet { }
+
+// Auto-generates constructor, properties, and LINQ projection
+var userFacet = user.ToFacet<UserFacet>();
+var userFacet = user.ToFacet<User, UserFacet>(); //Much faster
+
+var user = userFacet.BackTo<User>();
+var user = userFacet.BackTo<UserFacet, User>(); //Much faster
+
+var users = users.SelectFacets<UserFacet>();
+var users = users.SelectFacets<User, UserFacet>(); //Much faster
 ```
 
 ### Custom Sync Mapping
