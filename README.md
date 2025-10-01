@@ -100,7 +100,10 @@ For expression transformation utilities:
 dotnet add package Facet.Mapping.Expressions
 ```
 
-### Property Exclusion & Field Inclusion
+### Define Facets
+
+... and specify what you need.
+
 ```csharp
 // Exclude sensitive properties
 string[] excludeFields = { "Password", "Email" };
