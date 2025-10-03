@@ -25,7 +25,6 @@ jobs:
           !contains(github.event.pull_request.labels.*.name, 'enhancement') &&
           !contains(github.event.pull_request.labels.*.name, 'breaking-change') &&
           !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
-          !contains(github.event.pull_request.labels.*.name, 'no-changelog') &&
           !contains(github.event.pull_request.labels.*.name, 'documentation')
         run: |
           echo "::error::Pull request must have at least one changelog label: bug, enhancement, breaking-change, dependencies, no-changelog, or documentation"
