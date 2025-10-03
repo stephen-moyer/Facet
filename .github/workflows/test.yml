@@ -2,15 +2,6 @@
 
 name: test
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "main"
-      - "master"
-      - "develop"
-  pull_request:
-    branches:
-      - "*"
   workflow_run:
     workflows: ["build"]
     types:
