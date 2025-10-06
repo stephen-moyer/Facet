@@ -217,7 +217,7 @@ public class UserController : ControllerBase
 }
 ```
 
-### NEW: Hybrid Mapping with Dependency Injection
+### Hybrid Mapping with Dependency Injection
 
 ```csharp
 public class UserHybridMapperWithDI : IFacetMapConfigurationHybridInstance<User, UserDto>
