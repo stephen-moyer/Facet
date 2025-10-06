@@ -59,15 +59,15 @@ You can think of it like **carving out a specific facet** of a gem:
 
 Facet is modular and consists of several NuGet packages:
 
-- **Facet**: The core source generator. Generates DTOs, projections, and mapping code.
+- **[Facet](https://github.com/Tim-Maes/Facet/blob/master/README.md)**: The core source generator. Generates DTOs, projections, and mapping code.
 
-- **Facet.Extensions**: Provider-agnostic extension methods for mapping and projecting (works with any LINQ provider, no EF Core dependency).
+- **[Facet.Extensions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Extensions/README.md)**: Provider-agnostic extension methods for mapping and projecting (works with any LINQ provider, no EF Core dependency).
 
-- **Facet.Mapping**: Advanced static mapping configuration support with async capabilities and dependency injection for complex mapping scenarios.
+- **[Facet.Mapping](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Mapping)**: Advanced static mapping configuration support with async capabilities and dependency injection for complex mapping scenarios.
 
-- **Facet.Mapping.Expressions**: Expression tree transformation utilities for transforming predicates, selectors, and business logic between source entities and their Facet projections.
+- **[Facet.Mapping.Expressions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Mapping.Expressions/README.md)**: Expression tree transformation utilities for transforming predicates, selectors, and business logic between source entities and their Facet projections.
 
-- **Facet.Extensions.EFCore**: Async extension methods for Entity Framework Core (requires EF Core 6+).
+- **[Facet.Extensions.EFCore](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Extensions.EFCore)**: Async extension methods for Entity Framework Core (requires EF Core 6+).
 
 ## :rocket: Quick start 
 
