@@ -306,37 +306,6 @@ public class Schedule
 // - UpsertScheduleRequest (excludes Password, includes InternalNotes)
 ```
 
-#### Perfect for RESTful APIs
-```csharp
-[HttpPost]
-public async Task<ActionResult<ScheduleResponse>> CreateSchedule(CreateScheduleRequest request)
-{
-    var schedule = new Schedule
-    {
-        Name = request.Name,
-        // Map other properties;;;
-    };
-
-    context.Schedules.Add(schedule);
-    await context.SaveChangesAsync();
-    return schedule.ToFacet<ScheduleResponse>();
-}
-
-[HttpPut("{id}")]
-public async Task<ActionResult<ScheduleResponse>> UpsertSchedule(int id, UpsertScheduleRequest body)
-{
-    var schedule = context.GetScheduleById(id);
-    if (schedule == null) return NotFound();
-    
-    // Ensure the body ID matches the route ID  
-    body = body with { Id = id };
-    
-    schedule.UpdateFromFacet(body, context);
-    await context.SaveChangesAsync();
-    return schedule.ToFacet<ScheduleResponse>();
-}
-```
-
 ## :chart_with_upwards_trend: Performance Benchmarks
 
 Facet delivers competitive performance across different mapping scenarios. Here's how it compares to popular alternatives:
