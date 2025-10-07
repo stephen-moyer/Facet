@@ -597,6 +597,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
         var isPositional = model.Kind is FacetKind.Record or FacetKind.RecordStruct && !model.HasExistingPrimaryConstructor;
         var hasInitOnlyProperties = model.Members.Any(m => m.IsInitOnly);
+        var hasRequiredProperties = model.Members.Any(m => m.IsRequired);
         var hasCustomMapping = !string.IsNullOrWhiteSpace(model.ConfigurationTypeName);
 
         // Only generate positional declaration if there's no existing primary constructor
@@ -668,7 +669,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
         // Generate constructor
         if (model.GenerateConstructor)
         {
-            GenerateConstructor(sb, model, isPositional, hasInitOnlyProperties, hasCustomMapping);
+            GenerateConstructor(sb, model, isPositional, hasInitOnlyProperties, hasCustomMapping, hasRequiredProperties);
         }
 
         // Generate parameterless constructor if requested
@@ -736,7 +737,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
         return new string(' ', 4 * (model.ContainingTypes.Length + 1));
     }
 
-    private static void GenerateConstructor(StringBuilder sb, FacetTargetModel model, bool isPositional, bool hasInitOnlyProperties, bool hasCustomMapping)
+    private static void GenerateConstructor(StringBuilder sb, FacetTargetModel model, bool isPositional, bool hasInitOnlyProperties, bool hasCustomMapping, bool hasRequiredProperties)
     {
         var indent = GetIndentation(model);
 
@@ -772,6 +773,10 @@ public sealed class FacetGenerator : IIncrementalGenerator
             ctorSig += $" : this({args})";
         }
 
+		if (hasRequiredProperties)
+		{
+			sb.AppendLine("    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]");
+		}
         sb.AppendLine($"    {ctorSig}");
         sb.AppendLine("    {");
 
