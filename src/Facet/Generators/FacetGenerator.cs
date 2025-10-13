@@ -511,6 +511,14 @@ public sealed class FacetGenerator : IIncrementalGenerator
         }
         sb.AppendLine();
 
+        // Nullable must be enabled in generated code with a directive
+        var hasNullableProperties = model.Members.Any(m => m.TypeName.EndsWith("?"));
+        if (hasNullableProperties)
+        {
+            sb.AppendLine("#nullable enable");
+            sb.AppendLine();
+        }
+
         if (!string.IsNullOrWhiteSpace(model.Namespace))
         {
             sb.AppendLine($"namespace {model.Namespace};");
