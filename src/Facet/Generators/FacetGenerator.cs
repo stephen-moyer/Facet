@@ -138,6 +138,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
                             p.Name,
                             GeneratorUtilities.GetTypeNameWithNullability(p.Type),
                             FacetMemberKind.Property,
+                            p.Type.IsValueType,
                             isInitOnly,
                             isRequired,
                             false, // Properties are not readonly
@@ -159,6 +160,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
                     p.Name,
                     typeName,
                     FacetMemberKind.Property,
+                    p.Type.IsValueType,
                     shouldPreserveInitOnly,
                     shouldPreserveRequired,
                     false, // Properties are not readonly
@@ -178,6 +180,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
                             f.Name,
                             GeneratorUtilities.GetTypeNameWithNullability(f.Type),
                             FacetMemberKind.Field,
+                            f.Type.IsValueType,
                             false, // Fields don't have init-only
                             isRequired,
                             f.IsReadOnly, // Fields can be readonly
@@ -198,6 +201,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
                     f.Name,
                     typeName,
                     FacetMemberKind.Field,
+                    f.Type.IsValueType,
                     false, // Fields don't have init-only
                     shouldPreserveRequired,
                     f.IsReadOnly, // Fields can be readonly
@@ -512,8 +516,8 @@ public sealed class FacetGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         // Nullable must be enabled in generated code with a directive
-        var hasNullableProperties = model.Members.Any(m => m.TypeName.EndsWith("?"));
-        if (hasNullableProperties)
+        var hasNullableRefTypeMembers = model.Members.Any(m => !m.IsValueType && m.TypeName.EndsWith("?"));
+        if (hasNullableRefTypeMembers)
         {
             sb.AppendLine("#nullable enable");
             sb.AppendLine();
@@ -743,10 +747,10 @@ public sealed class FacetGenerator : IIncrementalGenerator
             ctorSig += $" : this({args})";
         }
 
-		if (hasRequiredProperties)
-		{
-			sb.AppendLine("    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]");
-		}
+        if (hasRequiredProperties)
+        {
+            sb.AppendLine("    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]");
+        }
         sb.AppendLine($"    {ctorSig}");
         sb.AppendLine("    {");
 
