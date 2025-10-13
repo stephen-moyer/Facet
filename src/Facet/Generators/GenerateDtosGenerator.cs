@@ -155,6 +155,7 @@ public sealed class GenerateDtosGenerator : IIncrementalGenerator
                         p.Name,
                         GeneratorUtilities.GetTypeNameWithNullability(p.Type),
                         FacetMemberKind.Property,
+                        p.Type.IsValueType,
                         isInitOnly,
                         isRequired,
                         false, // Properties are not readonly in the field sense
@@ -168,6 +169,7 @@ public sealed class GenerateDtosGenerator : IIncrementalGenerator
                         f.Name,
                         GeneratorUtilities.GetTypeNameWithNullability(f.Type),
                         FacetMemberKind.Field,
+                        f.Type.IsValueType,
                         false, // Fields don't have init-only
                         isRequired,
                         isReadOnly,
@@ -331,6 +333,14 @@ public sealed class GenerateDtosGenerator : IIncrementalGenerator
         sb.AppendLine("using System.Linq.Expressions;");
         sb.AppendLine();
 
+        // Nullable must be enabled in generated code with a directive
+        var hasNullableRefTypeMembers = model.Members.Any(m => !m.IsValueType && m.TypeName.EndsWith("?"));
+        if (hasNullableRefTypeMembers)
+        {
+            sb.AppendLine("#nullable enable");
+            sb.AppendLine();
+        }
+
         if (!string.IsNullOrWhiteSpace(model.TargetNamespace))
         {
             sb.AppendLine($"namespace {model.TargetNamespace};");
@@ -417,6 +427,13 @@ public sealed class GenerateDtosGenerator : IIncrementalGenerator
             sb.AppendLine($"    /// Initializes a new instance of the <see cref=\"{dtoName}\"/> class from the specified <see cref=\"{sourceTypeName}\"/>.");
             sb.AppendLine($"    /// </summary>");
             sb.AppendLine($"    /// <param name=\"source\">The source <see cref=\"{sourceTypeName}\"/> object to copy data from.</param>");
+
+            var hasRequiredProperties = model.Members.Any(m => m.IsRequired);
+            if (hasRequiredProperties)
+            {
+        	    sb.AppendLine("    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]");
+            }
+
             sb.AppendLine($"    public {dtoName}({model.SourceTypeName} source)");
             sb.AppendLine("    {");
 

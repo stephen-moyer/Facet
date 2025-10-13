@@ -7,16 +7,18 @@ internal sealed class FacetMember : IEquatable<FacetMember>
     public string Name { get; }
     public string TypeName { get; }
     public FacetMemberKind Kind { get; }
+    public bool IsValueType { get; }
     public bool IsInitOnly { get; }
     public bool IsRequired { get; }
     public bool IsReadOnly { get; }
     public string? XmlDocumentation { get; }
 
-    public FacetMember(string name, string typeName, FacetMemberKind kind, bool isInitOnly = false, bool isRequired = false, bool isReadOnly = false, string? xmlDocumentation = null)
+    public FacetMember(string name, string typeName, FacetMemberKind kind, bool isValueType, bool isInitOnly = false, bool isRequired = false, bool isReadOnly = false, string? xmlDocumentation = null)
     {
         Name = name;
         TypeName = typeName;
         Kind = kind;
+        IsValueType = isValueType;
         IsInitOnly = isInitOnly;
         IsRequired = isRequired;
         IsReadOnly = isReadOnly;
