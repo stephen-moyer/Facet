@@ -52,7 +52,7 @@ You can think of it like **carving out a specific facet** of a gem:
 - :white_check_mark: Handle **complex and nested objects**
 - :white_check_mark: **Copy data validation attributes**
 - :white_check_mark: Full mapping support with custom mapping configurations
-- :white_check_mark: **Expression transformation and mapping utilities** for reusing business logic across entities and DTOs
+- :white_check_mark: **Expression transformation** and mapping utilities
 - :white_check_mark: Preserve member and type XML documentation
 - :white_check_mark: Can auto-generate complete CRUD DTO sets
 
