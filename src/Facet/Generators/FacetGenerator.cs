@@ -152,7 +152,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
         var allMembersWithModifiers = GeneratorUtilities.GetAllMembersWithModifiers(sourceType);
 
         // Extract type-level XML documentation from the source type
-        var typeXmlDocumentation = ExtractXmlDocumentation(sourceType);
+        var typeXmlDocumentation = CodeGenerationHelpers.ExtractXmlDocumentation(sourceType);
 
         foreach (var (member, isInitOnly, isRequired) in allMembersWithModifiers)
         {
@@ -173,7 +173,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
             if (member is IPropertySymbol { DeclaredAccessibility: Accessibility.Public } p)
             {
-                var memberXmlDocumentation = ExtractXmlDocumentation(p);
+                var memberXmlDocumentation = CodeGenerationHelpers.ExtractXmlDocumentation(p);
 
                 if (!shouldIncludeMember)
                 {
@@ -216,7 +216,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
                 // Extract copiable attributes if requested
                 var attributes = copyAttributes
-                    ? ExtractCopiableAttributes(p, FacetMemberKind.Property)
+                    ? AttributeProcessor.ExtractCopiableAttributes(p, FacetMemberKind.Property)
                     : new List<string>();
 
                 members.Add(new FacetMember(
@@ -235,7 +235,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
             }
             else if (includeFields && member is IFieldSymbol { DeclaredAccessibility: Accessibility.Public } f)
             {
-                var memberXmlDocumentation = ExtractXmlDocumentation(f);
+                var memberXmlDocumentation = CodeGenerationHelpers.ExtractXmlDocumentation(f);
 
                 if (!shouldIncludeMember)
                 {
@@ -265,7 +265,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
                 // Extract copiable attributes if requested
                 var attributes = copyAttributes
-                    ? ExtractCopiableAttributes(f, FacetMemberKind.Field)
+                    ? AttributeProcessor.ExtractCopiableAttributes(f, FacetMemberKind.Field)
                     : new List<string>();
 
                 members.Add(new FacetMember(
@@ -333,152 +333,6 @@ public sealed class FacetGenerator : IIncrementalGenerator
             excludedRequiredMembers.ToImmutableArray(),
             nullableProperties,
             copyAttributes);
-    }
-
-    /// <summary>
-    /// Extracts copiable attributes from a member symbol.
-    /// Filters out internal compiler attributes and non-copiable attributes.
-    /// </summary>
-    private static List<string> ExtractCopiableAttributes(ISymbol member, FacetMemberKind targetKind)
-    {
-        var copiableAttributes = new List<string>();
-
-        foreach (var attr in member.GetAttributes())
-        {
-            if (attr.AttributeClass == null) continue;
-
-            var attributeFullName = attr.AttributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            // Skip internal compiler-generated attributes
-            if (attributeFullName.StartsWith("global::System.Runtime.CompilerServices.")) continue;
-
-            // Skip the base ValidationAttribute class itself (but allow derived classes)
-            if (attributeFullName == "global::System.ComponentModel.DataAnnotations.ValidationAttribute") continue;
-
-            // Check if attribute can be applied to the target member type
-            var attributeTargets = GetAttributeTargets(attr.AttributeClass);
-            if (targetKind == FacetMemberKind.Property && !attributeTargets.HasFlag(System.AttributeTargets.Property)) continue;
-            if (targetKind == FacetMemberKind.Field && !attributeTargets.HasFlag(System.AttributeTargets.Field)) continue;
-
-            // Generate attribute syntax
-            var attributeSyntax = GenerateAttributeSyntax(attr);
-            if (!string.IsNullOrWhiteSpace(attributeSyntax))
-            {
-                copiableAttributes.Add(attributeSyntax);
-            }
-        }
-
-        return copiableAttributes;
-    }
-
-    /// <summary>
-    /// Gets the AttributeTargets for an attribute type symbol.
-    /// </summary>
-    private static System.AttributeTargets GetAttributeTargets(INamedTypeSymbol attributeType)
-    {
-        var attributeUsage = attributeType.GetAttributes()
-            .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == "System.AttributeUsageAttribute");
-
-        if (attributeUsage != null && attributeUsage.ConstructorArguments.Length > 0)
-        {
-            var targets = attributeUsage.ConstructorArguments[0];
-            if (targets.Value is int targetValue)
-            {
-                return (System.AttributeTargets)targetValue;
-            }
-        }
-
-        // Default to All if no AttributeUsage is specified
-        return System.AttributeTargets.All;
-    }
-
-    /// <summary>
-    /// Generates the C# syntax for an attribute from AttributeData.
-    /// </summary>
-    private static string GenerateAttributeSyntax(AttributeData attribute)
-    {
-        var sb = new StringBuilder();
-
-        // Get the attribute name without the "Attribute" suffix if present
-        var attributeName = attribute.AttributeClass!.Name;
-        if (attributeName.EndsWith("Attribute") && attributeName.Length > 9)
-        {
-            attributeName = attributeName.Substring(0, attributeName.Length - 9);
-        }
-
-        sb.Append($"[{attributeName}");
-
-        var hasArguments = attribute.ConstructorArguments.Length > 0 || attribute.NamedArguments.Length > 0;
-
-        if (hasArguments)
-        {
-            sb.Append("(");
-            var arguments = new List<string>();
-
-            // Constructor arguments
-            foreach (var arg in attribute.ConstructorArguments)
-            {
-                arguments.Add(FormatTypedConstant(arg));
-            }
-
-            // Named arguments
-            foreach (var namedArg in attribute.NamedArguments)
-            {
-                arguments.Add($"{namedArg.Key} = {FormatTypedConstant(namedArg.Value)}");
-            }
-
-            sb.Append(string.Join(", ", arguments));
-            sb.Append(")");
-        }
-
-        sb.Append("]");
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Formats a TypedConstant value for attribute syntax generation.
-    /// </summary>
-    private static string FormatTypedConstant(TypedConstant constant)
-    {
-        if (constant.IsNull)
-            return "null";
-
-        switch (constant.Kind)
-        {
-            case TypedConstantKind.Primitive:
-                if (constant.Value is string strValue)
-                {
-                    var escaped = strValue.Replace("\\", "\\\\").Replace("\"", "\\\"");
-                    return $"\"{escaped}\"";
-                }
-                if (constant.Value is bool boolValue)
-                    return boolValue ? "true" : "false";
-                if (constant.Value is char charValue)
-                    return $"'{charValue}'";
-                if (constant.Value is double doubleValue)
-                    return doubleValue.ToString(System.Globalization.CultureInfo.InvariantCulture) + "d";
-                if (constant.Value is float floatValue)
-                    return floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f";
-                if (constant.Value is decimal decimalValue)
-                    return decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m";
-                return constant.Value?.ToString() ?? "null";
-
-            case TypedConstantKind.Enum:
-                var enumType = constant.Type?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                return $"{enumType}.{constant.Value}";
-
-            case TypedConstantKind.Type:
-                if (constant.Value is ITypeSymbol typeValue)
-                    return $"typeof({typeValue.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})";
-                return "null";
-
-            case TypedConstantKind.Array:
-                var arrayElements = constant.Values.Select(FormatTypedConstant);
-                return $"new[] {{ {string.Join(", ", arrayElements)} }}";
-
-            default:
-                return constant.Value?.ToString() ?? "null";
-        }
     }
 
     /// <summary>
@@ -605,129 +459,13 @@ public sealed class FacetGenerator : IIncrementalGenerator
         => args.FirstOrDefault(kv => kv.Key == name)
             .Value.Value is T t ? t : defaultValue;
 
-    /// <summary>
-    /// Extracts and formats XML documentation from a symbol.
-    /// </summary>
-    private static string? ExtractXmlDocumentation(ISymbol symbol)
-    {
-        var documentationComment = symbol.GetDocumentationCommentXml();
-        if (string.IsNullOrWhiteSpace(documentationComment))
-            return null;
-
-        return FormatXmlDocumentation(documentationComment!);
-    }
-
-    /// <summary>
-    /// Formats XML documentation comment into proper /// format for code generation.
-    /// </summary>
-    private static string FormatXmlDocumentation(string xmlDoc)
-    {
-        if (string.IsNullOrWhiteSpace(xmlDoc))
-            return string.Empty;
-
-        var lines = new List<string>();
-
-        try
-        {
-            var doc = System.Xml.Linq.XDocument.Parse(xmlDoc);
-            var root = doc.Root;
-
-            if (root == null)
-                return string.Empty;
-
-            // Process summary
-            var summary = root.Element("summary");
-            if (summary != null)
-            {
-                lines.Add("/// <summary>");
-                var summaryText = summary.Value.Trim();
-                if (!string.IsNullOrEmpty(summaryText))
-                {
-                    foreach (var line in summaryText.Split('\n'))
-                    {
-                        lines.Add($"/// {line.Trim()}");
-                    }
-                }
-                lines.Add("/// </summary>");
-            }
-
-            // Process value
-            var value = root.Element("value");
-            if (value != null)
-            {
-                lines.Add("/// <value>");
-                var valueText = value.Value.Trim();
-                if (!string.IsNullOrEmpty(valueText))
-                {
-                    foreach (var line in valueText.Split('\n'))
-                    {
-                        lines.Add($"/// {line.Trim()}");
-                    }
-                }
-                lines.Add("/// </value>");
-            }
-
-            // Process remarks
-            var remarks = root.Element("remarks");
-            if (remarks != null)
-            {
-                lines.Add("/// <remarks>");
-                var remarksText = remarks.Value.Trim();
-                if (!string.IsNullOrEmpty(remarksText))
-                {
-                    foreach (var line in remarksText.Split('\n'))
-                    {
-                        lines.Add($"/// {line.Trim()}");
-                    }
-                }
-                lines.Add("/// </remarks>");
-            }
-
-            // Process example
-            var example = root.Element("example");
-            if (example != null)
-            {
-                lines.Add("/// <example>");
-                var exampleText = example.Value.Trim();
-                if (!string.IsNullOrEmpty(exampleText))
-                {
-                    foreach (var line in exampleText.Split('\n'))
-                    {
-                        lines.Add($"/// {line.Trim()}");
-                    }
-                }
-                lines.Add("/// </example>");
-            }
-
-            return lines.Count > 0 ? string.Join("\n", lines) : string.Empty;
-        }
-        catch
-        {
-            // If XML parsing fails, return empty string rather than crashing the generator
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
-    /// Gets the simple type name from a fully qualified type name.
-    /// </summary>
-    private static string GetSimpleTypeName(string fullyQualifiedTypeName)
-    {
-        var lastDotIndex = fullyQualifiedTypeName.LastIndexOf('.');
-        if (lastDotIndex >= 0 && lastDotIndex < fullyQualifiedTypeName.Length - 1)
-        {
-            return fullyQualifiedTypeName.Substring(lastDotIndex + 1);
-        }
-        return fullyQualifiedTypeName;
-    }
-
     private static string Generate(FacetTargetModel model)
     {
         var sb = new StringBuilder();
         GenerateFileHeader(sb);
 
         // Collect all namespaces from referenced types
-        var namespacesToImport = CollectNamespaces(model);
+        var namespacesToImport = CodeGenerationHelpers.CollectNamespaces(model);
 
         // Generate using statements for all required namespaces
         foreach (var ns in namespacesToImport.OrderBy(x => x))
@@ -844,14 +582,6 @@ public sealed class FacetGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Gets the indentation string for the current nesting level
-    /// </summary>
-    private static string GetIndentation(FacetTargetModel model)
-    {
-        return new string(' ', 4 * (model.ContainingTypes.Length + 1));
-    }
-
-    /// <summary>
     /// Generates member declarations (properties and fields) for the target type.
     /// </summary>
     private static void GenerateMembers(StringBuilder sb, FacetTargetModel model, string memberIndent)
@@ -921,13 +651,13 @@ public sealed class FacetGenerator : IIncrementalGenerator
         {
             // Generate projection XML documentation
             sb.AppendLine($"{memberIndent}/// <summary>");
-            sb.AppendLine($"{memberIndent}/// Gets the projection expression for converting <see cref=\"{GetSimpleTypeName(model.SourceTypeName)}\"/> to <see cref=\"{model.Name}\"/>.");
+            sb.AppendLine($"{memberIndent}/// Gets the projection expression for converting <see cref=\"{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}\"/> to <see cref=\"{model.Name}\"/>.");
             sb.AppendLine($"{memberIndent}/// Use this for LINQ and Entity Framework query projections.");
             sb.AppendLine($"{memberIndent}/// </summary>");
             sb.AppendLine($"{memberIndent}/// <value>An expression tree that can be used in LINQ queries for efficient database projections.</value>");
             sb.AppendLine($"{memberIndent}/// <example>");
             sb.AppendLine($"{memberIndent}/// <code>");
-            sb.AppendLine($"{memberIndent}/// var dtos = context.{GetSimpleTypeName(model.SourceTypeName)}s");
+            sb.AppendLine($"{memberIndent}/// var dtos = context.{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}s");
             sb.AppendLine($"{memberIndent}///     .Where(x => x.IsActive)");
             sb.AppendLine($"{memberIndent}///     .Select({model.Name}.Projection)");
             sb.AppendLine($"{memberIndent}///     .ToList();");
@@ -940,7 +670,7 @@ public sealed class FacetGenerator : IIncrementalGenerator
 
     private static void GenerateConstructor(StringBuilder sb, FacetTargetModel model, bool isPositional, bool hasInitOnlyProperties, bool hasCustomMapping, bool hasRequiredProperties)
     {
-        var indent = GetIndentation(model);
+        var indent = CodeGenerationHelpers.GetIndentation(model);
 
         // If the target has an existing primary constructor, skip constructor generation
         // and provide only a factory method
@@ -954,9 +684,9 @@ public sealed class FacetGenerator : IIncrementalGenerator
         // Generate constructor XML documentation
         sb.AppendLine();
         sb.AppendLine("    /// <summary>");
-        sb.AppendLine($"    /// Initializes a new instance of the <see cref=\"{model.Name}\"/> class from the specified <see cref=\"{GetSimpleTypeName(model.SourceTypeName)}\"/>.");
+        sb.AppendLine($"    /// Initializes a new instance of the <see cref=\"{model.Name}\"/> class from the specified <see cref=\"{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}\"/>.");
         sb.AppendLine("    /// </summary>");
-        sb.AppendLine($"    /// <param name=\"source\">The source <see cref=\"{GetSimpleTypeName(model.SourceTypeName)}\"/> object to copy data from.</param>");
+        sb.AppendLine($"    /// <param name=\"source\">The source <see cref=\"{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}\"/> object to copy data from.</param>");
         if (hasCustomMapping)
         {
             sb.AppendLine("    /// <remarks>");
@@ -1021,9 +751,9 @@ public sealed class FacetGenerator : IIncrementalGenerator
         {
             sb.AppendLine();
             sb.AppendLine("    /// <summary>");
-            sb.AppendLine($"    /// Creates a new instance of <see cref=\"{model.Name}\"/> from the specified <see cref=\"{GetSimpleTypeName(model.SourceTypeName)}\"/> with init-only properties.");
+            sb.AppendLine($"    /// Creates a new instance of <see cref=\"{model.Name}\"/> from the specified <see cref=\"{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}\"/> with init-only properties.");
             sb.AppendLine("    /// </summary>");
-            sb.AppendLine($"    /// <param name=\"source\">The source <see cref=\"{GetSimpleTypeName(model.SourceTypeName)}\"/> object to copy data from.</param>");
+            sb.AppendLine($"    /// <param name=\"source\">The source <see cref=\"{CodeGenerationHelpers.GetSimpleTypeName(model.SourceTypeName)}\"/> object to copy data from.</param>");
             sb.AppendLine($"    /// <returns>A new <see cref=\"{model.Name}\"/> instance with all properties initialized from the source.</returns>");
             sb.AppendLine($"    public static {model.Name} FromSource({model.SourceTypeName} source)");
             sb.AppendLine("    {");
@@ -1151,91 +881,6 @@ public sealed class FacetGenerator : IIncrementalGenerator
             sb.AppendLine("    {");
             sb.AppendLine("    }");
         }
-    }
-
-
-    /// <summary>
-    /// Collects all namespaces that need to be imported based on the types used in the model.
-    /// </summary>
-    private static HashSet<string> CollectNamespaces(FacetTargetModel model)
-    {
-        var namespaces = new HashSet<string>
-        {
-            "System",
-            "System.Linq.Expressions"
-        };
-
-        // Add System.ComponentModel.DataAnnotations if any member has attributes
-        if (model.CopyAttributes && model.Members.Any(m => m.Attributes.Count > 0))
-        {
-            namespaces.Add("System.ComponentModel.DataAnnotations");
-        }
-
-        var sourceTypeNamespace = ExtractNamespaceFromFullyQualifiedType(model.SourceTypeName);
-        if (!string.IsNullOrWhiteSpace(sourceTypeNamespace))
-        {
-            namespaces.Add(sourceTypeNamespace!);
-        }
-
-        foreach (var member in model.Members)
-        {
-            var memberTypeNamespace = ExtractNamespaceFromFullyQualifiedType(member.TypeName);
-            if (!string.IsNullOrWhiteSpace(memberTypeNamespace))
-            {
-                namespaces.Add(memberTypeNamespace!);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(model.ConfigurationTypeName))
-        {
-            var configNamespace = ExtractNamespaceFromFullyQualifiedType(model.ConfigurationTypeName!);
-            if (!string.IsNullOrWhiteSpace(configNamespace))
-            {
-                namespaces.Add(configNamespace!);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(model.Namespace))
-        {
-            namespaces.Remove(model.Namespace!);
-        }
-
-        namespaces.Remove("");
-
-        return namespaces;
-    }
-
-    /// <summary>
-    /// Extracts the namespace from a fully qualified type name (e.g., "global::System.String" -> "System").
-    /// </summary>
-    private static string? ExtractNamespaceFromFullyQualifiedType(string fullyQualifiedTypeName)
-    {
-        if (string.IsNullOrWhiteSpace(fullyQualifiedTypeName))
-            return null;
-
-        // Remove global:: prefix if present
-        var typeName = fullyQualifiedTypeName.StartsWith("global::")
-            ? fullyQualifiedTypeName.Substring(8)
-            : fullyQualifiedTypeName;
-
-        var genericIndex = typeName.IndexOf('<');
-        if (genericIndex > 0)
-        {
-            typeName = typeName.Substring(0, genericIndex);
-        }
-
-        if (typeName.EndsWith("?"))
-        {
-            typeName = typeName.Substring(0, typeName.Length - 1);
-        }
-
-        var lastDotIndex = typeName.LastIndexOf('.');
-        if (lastDotIndex > 0)
-        {
-            return typeName.Substring(0, lastDotIndex);
-        }
-
-        return null;
     }
 
     private static void GenerateBackToMethod(StringBuilder sb, FacetTargetModel model)
