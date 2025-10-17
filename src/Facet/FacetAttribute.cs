@@ -99,13 +99,14 @@ public sealed class FacetAttribute : Attribute
     /// An array of nested facet types that represent nested objects within the source type.
     /// When specified, the generator will automatically map properties of the source type to these nested facets.
     /// </summary>
-    /// <remarks>
-    /// This feature simplifies nested type handling by:
-    /// <list type="bullet">
-    /// <item>Automatically detecting which properties should use nested facets based on the nested facet's source type</item>
-    /// </list>
-    /// </remarks>
     public Type[]? NestedFacets { get; set; }
+
+    /// <summary>
+    /// When true, copies attributes from the source type members to the generated facet members.
+    /// Only copies attributes that are valid on the target (excludes internal compiler attributes and non-copiable attributes).
+    /// Default is false.
+    /// </summary>
+    public bool CopyAttributes { get; set; } = false;
 
     /// <summary>
     /// Creates a new FacetAttribute that targets a given source type and excludes specified members.
