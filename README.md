@@ -83,56 +83,123 @@ dotnet add package Facet.Mapping.Expressions
 ```
   
 </details>
-
-<details>
-  <summary>Define Facets</summary>
-... and specify what you need.
+ <details>
+    <summary>Facets usage</summary>
+   
 
   ```csharp
-// Exclude sensitive properties
-string[] excludeFields = { "Password", "Email" };
+ // Example domain models:
 
-[Facet(typeof(User), exclude: excludeFields)]
-public partial record UserWithoutEmail;
+  public class User
+  {
+      public int Id { get; set; }
+      public string FirstName { get; set; }
+      public string LastName { get; set; }
+      public string Email { get; set; }
+      public string PasswordHash { get; set; }
+      public DateTime DateOfBirth { get; set; }
+      public decimal Salary { get; set; }
+      public string Department { get; set; }
+      public bool IsActive { get; set; }
+      public Address HomeAddress { get; set; }
+      public Company Employer { get; set; }
+      public List<Project> Projects { get; set; }
+      public DateTime CreatedAt { get; set; }
+      public string InternalNotes { get; set; }
+  }
 
-// Include only specific properties
-[Facet(typeof(User), Include = new[] { "FirstName", "LastName", "Email" })]
-public partial record UserContactDto;
+  public class Address
+  {
+      public string Street { get; set; }
+      public string City { get; set; }
+      public string State { get; set; }
+      public string ZipCode { get; set; }
+  }
 
-// Include public fields
-[Facet(typeof(Entity), IncludeFields = true)]
-public partial record EntityDto;
+  public class Company
+  {
+      public int Id { get; set; }
+      public string Name { get; set; }
+      public Address Headquarters { get; set; }
+  }
 
-// Include specific fields and properties
-[Facet(typeof(Entity), Include = new[] { "Name", "Status" }, IncludeFields = true)]
-public partial record EntitySummaryDto;
+  public class Project
+  {
+      public int Id { get; set; }
+      public string Name { get; set; }
+      public DateTime StartDate { get; set; }
+  }
+```
 
-// Make all properties nullable for query/filter scenarios
-[Facet(typeof(Product), "InternalNotes", NullableProperties = true, GenerateBackTo = false)]
-public partial record ProductQueryDto;
+Create focused facets for different scenarios:
 
-// Copy data validation attributes from source type
-[Facet(typeof(User), CopyAttributes = true)]
-public partial class UserDto; // Copies [Required], [StringLength], [EmailAddress], etc.
+```csharp
+  // 1. Public API - Exclude all sensitive data
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"])]
+  public partial record UserPublicDto;
 
-// Automatically map nested types with NestedFacets
-[Facet(typeof(Address))]
-public partial record AddressDto;
+  // 2. Contact Information - Include only specific properties
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email", "Department"])]
+  public partial record UserContactDto;
 
-[Facet(typeof(Company), NestedFacets = [typeof(AddressDto)])]
-public partial record CompanyDto; // Automatically includes AddressDto for nested Address property
+  // 3. Query/Filter DTO - Make all properties nullable
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email", "Department", "IsActive"],
+      NullableProperties = true,
+      GenerateBackTo = false)]
+  public partial record UserFilterDto;
 
-[Facet(typeof(Employee),
-    exclude: ["PasswordHash", "Salary"],
-    NestedFacets = [typeof(CompanyDto), typeof(AddressDto)])]
-public partial record EmployeeDto; // Handles multiple nested facets automatically
+  // 4. Validation-Aware DTO - Copy data annotations
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email"],
+      CopyAttributes = true)]
+  public partial record UserRegistrationDto;
 
-// Collection support - automatically maps List<T>, arrays, ICollection<T>, etc.
-[Facet(typeof(OrderItem))]
-public partial record OrderItemDto;
+  // 5. Nested Objects - Single nested facet
+  [Facet(typeof(Address))]
+  public partial record AddressDto;
 
-[Facet(typeof(Order), NestedFacets = [typeof(OrderItemDto)])]
-public partial record OrderDto; // List<OrderItem>-> List<OrderItemDto> automatically!
+  [Facet(typeof(User),
+      Include = ["Id", "FirstName", "LastName", "HomeAddress"],
+      NestedFacets = [typeof(AddressDto)])]
+  public partial record UserWithAddressDto;
+  // Address -> AddressDto automatically
+  // Type-safe nested mapping
+
+  // 6. Complex Nested - Multiple nested facets
+  [Facet(typeof(Company), NestedFacets = [typeof(AddressDto)])]
+  public partial record CompanyDto;
+
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"],
+      NestedFacets = [typeof(AddressDto), typeof(CompanyDto)])]
+  public partial record UserDetailDto;
+  // Multi-level nesting supported
+
+  // 7. Collections - Automatic collection mapping
+  [Facet(typeof(Project))]
+  public partial record ProjectDto;
+
+  [Facet(typeof(User),
+      Include = ["Id", "FirstName", "LastName", "Projects"],
+      NestedFacets = [typeof(ProjectDto)])]
+  public partial record UserWithProjectsDto;
+  // List<Project> -> List<ProjectDto> automatically!
+  // Arrays, ICollection<T>, IEnumerable<T> all supported
+
+  // 8. Everything Combined
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"],
+      NestedFacets = [typeof(AddressDto), typeof(CompanyDto), typeof(ProjectDto)],
+      CopyAttributes = true)]
+  public partial record UserCompleteDto;
+  // Excludes sensitive fields
+  // Maps nested Address and Company objects
+  // Maps Projects collection (List<Project> -> List<ProjectDto>)
+  // Copies validation attributes
+  // Ready for production APIs
 ```
 
 </details>
