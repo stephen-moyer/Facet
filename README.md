@@ -56,8 +56,11 @@ You can think of it like **carving out a specific facet** of a gem:
 - :white_check_mark: Preserve member and type XML documentation
 - :white_check_mark: Can auto-generate complete CRUD DTO sets
 
-## :rocket: Quick start 
+## 🚀 Quick Start
 
+<details>
+  <summary>Installation</summary>
+  
 ### Install the NuGet Package
 
 ```
@@ -78,12 +81,14 @@ For expression transformation utilities:
 ```
 dotnet add package Facet.Mapping.Expressions
 ```
+  
+</details>
 
-### Define Facets
-
+<details>
+  <summary>Define Facets</summary>
 ... and specify what you need.
 
-```csharp
+  ```csharp
 // Exclude sensitive properties
 string[] excludeFields = { "Password", "Email" };
 
@@ -130,7 +135,11 @@ public partial record OrderItemDto;
 public partial record OrderDto; // List<OrderItem>-> List<OrderItemDto> automatically!
 ```
 
-### Basic Projection of Facets
+</details>
+
+<details>
+<summary>Basic Projection of Facets</summary>
+
 ```csharp
 [Facet(typeof(User))]
 public partial class UserFacet { }
@@ -145,8 +154,11 @@ var user = userFacet.BackTo<UserFacet, User>(); //Much faster
 var users = users.SelectFacets<UserFacet>();
 var users = users.SelectFacets<User, UserFacet>(); //Much faster
 ```
+</details>
 
-### Custom Sync Mapping
+<details>
+  <summary>Custom Sync Mapping</summary>
+  
 ```csharp
 public class UserMapper : IFacetMapConfiguration<User, UserDto>
 {
@@ -164,8 +176,11 @@ public partial class UserDto
     public int Age { get; set; }
 }
 ```
+</details>
 
-### Async Mapping for I/O Operations
+<details>
+  <summary>Async Mapping for I/O Operations</summary>
+  
 ```csharp
 public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
 {
@@ -183,8 +198,11 @@ public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
 var userDto = await user.ToFacetAsync<User, UserDto, UserAsyncMapper>();
 var userDtos = await users.ToFacetsParallelAsync<User, UserDto, UserAsyncMapper>();
 ```
+</details>
 
-### Async Mapping with Dependency Injection
+<details>
+  <summary>Async Mapping with Dependency Injection</summary>
+  
 ```csharp
 public class UserAsyncMapperWithDI : IFacetMapConfigurationAsyncInstance<User, UserDto>
 {
@@ -210,10 +228,12 @@ var mapper = new UserAsyncMapperWithDI(profileService, reputationService);
 var userDto = await user.ToFacetAsync(mapper);
 var userDtos = await users.ToFacetsParallelAsync(mapper);
 ```
+</details>
 
-### EF Core Integration
+<details>
+  <summary>EF Core Integration</summary>
 
-#### Forward Mapping (Entity -> Facet)
+  #### Forward Mapping (Entity -> Facet)
 ```csharp
 // Async projection directly in EF Core queries
 var userDtos = await dbContext.Users
@@ -254,9 +274,11 @@ if (result.HasChanges)
         user.Id, string.Join(", ", result.ChangedProperties));
 }
 ```
+</details>
 
-### Automatic CRUD DTO Generation
-
+<details>
+  <summary>Automatic CRUD DTO Generation</summary>
+  
 Generate standard Create, Update, Response, Query, and Upsert DTOs automatically:
 
 ```csharp
@@ -315,6 +337,7 @@ public class Schedule
 // - ScheduleResponse (excludes Password, InternalNotes) 
 // - UpsertScheduleRequest (excludes Password, includes InternalNotes)
 ```
+</details>
 
 ## :earth_americas: The Facet Ecosystem
 
