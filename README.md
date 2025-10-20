@@ -30,8 +30,8 @@
 
 Facetting is the process of defining **focused views** of a larger model at compile time.
 
-Instead of manually writing separate DTOs, mappers, and projections, **Facet** allows you to declare what you want to keep, and generates everything else.
-It generates partial classes, records, structs, or record structs with constructors, LINQ projections, and even supports custom mappings, all at compile time, with zero runtime cost.
+Instead of manually writing separate DTOs, mappers, and projections, **Facet** allows you to declare what you want, and generates everything else.
+Generate classes, records, structs, or record structs with constructors, LINQ projections, and even supports custom mappings, all at compile time, with zero runtime cost.
 
 You can think of it like **carving out a specific facet** of a gem:
 
@@ -47,30 +47,20 @@ You can think of it like **carving out a specific facet** of a gem:
 ## :star: Key Features
 
 - :white_check_mark: Generate classes, records, structs, or record structs from existing types
-- :white_check_mark: Define what to include, or exclude fields/properties you don't want
-- :white_check_mark: Include/redact public fields
+- :white_check_mark: Handle **complex and nested objects & collections**
+- :white_check_mark: Define what to include, or exclude, or add
 - :white_check_mark: Constructors & LINQ projection expressions
+- :white_check_mark: **Copy data validation attributes**
 - :white_check_mark: Full mapping support with custom mapping configurations
-- :white_check_mark: Auto-generate complete CRUD DTO sets with `[GenerateDtos]`
-- :white_check_mark: **Expression transformation and mapping utilities** for reusing business logic across entities and DTOs
-- :white_check_mark: Preserves member and type XML documentation
+- :white_check_mark: **Expression transformation** and mapping utilities
+- :white_check_mark: Preserve member and type XML documentation
+- :white_check_mark: Can auto-generate complete CRUD DTO sets
 
-## :earth_americas: The Facet Ecosystem
+## 🚀 Quick Start
 
-Facet is modular and consists of several NuGet packages:
-
-- **[Facet](https://github.com/Tim-Maes/Facet/blob/master/README.md)**: The core source generator. Generates DTOs, projections, and mapping code.
-
-- **[Facet.Extensions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Extensions/README.md)**: Provider-agnostic extension methods for mapping and projecting (works with any LINQ provider, no EF Core dependency).
-
-- **[Facet.Mapping](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Mapping)**: Advanced static mapping configuration support with async capabilities and dependency injection for complex mapping scenarios.
-
-- **[Facet.Mapping.Expressions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Mapping.Expressions/README.md)**: Expression tree transformation utilities for transforming predicates, selectors, and business logic between source entities and their Facet projections.
-
-- **[Facet.Extensions.EFCore](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Extensions.EFCore)**: Async extension methods for Entity Framework Core (requires EF Core 6+).
-
-## :rocket: Quick start 
-
+<details>
+  <summary>Installation</summary>
+  
 ### Install the NuGet Package
 
 ```
@@ -91,36 +81,132 @@ For expression transformation utilities:
 ```
 dotnet add package Facet.Mapping.Expressions
 ```
+  
+</details>
+ <details>
+    <summary>Facets usage</summary>
+   
 
-### Define Facets
+  ```csharp
+ // Example domain models:
 
-... and specify what you need.
+  public class User
+  {
+      public int Id { get; set; }
+      public string FirstName { get; set; }
+      public string LastName { get; set; }
+      public string Email { get; set; }
+      public string PasswordHash { get; set; }
+      public DateTime DateOfBirth { get; set; }
+      public decimal Salary { get; set; }
+      public string Department { get; set; }
+      public bool IsActive { get; set; }
+      public Address HomeAddress { get; set; }
+      public Company Employer { get; set; }
+      public List<Project> Projects { get; set; }
+      public DateTime CreatedAt { get; set; }
+      public string InternalNotes { get; set; }
+  }
 
-```csharp
-// Exclude sensitive properties
-string[] excludeFields = { "Password", "Email" };
+  public class Address
+  {
+      public string Street { get; set; }
+      public string City { get; set; }
+      public string State { get; set; }
+      public string ZipCode { get; set; }
+  }
 
-[Facet(typeof(User), exclude: excludeFields)]
-public partial class UserWithoutEmail { }
+  public class Company
+  {
+      public int Id { get; set; }
+      public string Name { get; set; }
+      public Address Headquarters { get; set; }
+  }
 
-// Include only specific properties
-[Facet(typeof(User), Include = new[] { "FirstName", "LastName", "Email" })]
-public partial class UserContactDto { }
-
-// Include public fields
-[Facet(typeof(Entity), IncludeFields = true)]
-public partial class EntityDto { }
-
-// Include specific fields and properties
-[Facet(typeof(Entity), Include = new[] { "Name", "Status" }, IncludeFields = true)]
-public partial class EntitySummaryDto { }
-
-// Make all properties nullable for query/filter scenarios
-[Facet(typeof(Product), "InternalNotes", NullableProperties = true, GenerateBackTo = false)]
-public partial class ProductQueryDto { }
+  public class Project
+  {
+      public int Id { get; set; }
+      public string Name { get; set; }
+      public DateTime StartDate { get; set; }
+  }
 ```
 
-### Basic Projection of Facets
+Create focused facets for different scenarios:
+
+```csharp
+  // 1. Public API - Exclude all sensitive data
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"])]
+  public partial record UserPublicDto;
+
+  // 2. Contact Information - Include only specific properties
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email", "Department"])]
+  public partial record UserContactDto;
+
+  // 3. Query/Filter DTO - Make all properties nullable
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email", "Department", "IsActive"],
+      NullableProperties = true,
+      GenerateBackTo = false)]
+  public partial record UserFilterDto;
+
+  // 4. Validation-Aware DTO - Copy data annotations
+  [Facet(typeof(User),
+      Include = ["FirstName", "LastName", "Email"],
+      CopyAttributes = true)]
+  public partial record UserRegistrationDto;
+
+  // 5. Nested Objects - Single nested facet
+  [Facet(typeof(Address))]
+  public partial record AddressDto;
+
+  [Facet(typeof(User),
+      Include = ["Id", "FirstName", "LastName", "HomeAddress"],
+      NestedFacets = [typeof(AddressDto)])]
+  public partial record UserWithAddressDto;
+  // Address -> AddressDto automatically
+  // Type-safe nested mapping
+
+  // 6. Complex Nested - Multiple nested facets
+  [Facet(typeof(Company), NestedFacets = [typeof(AddressDto)])]
+  public partial record CompanyDto;
+
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"],
+      NestedFacets = [typeof(AddressDto), typeof(CompanyDto)])]
+  public partial record UserDetailDto;
+  // Multi-level nesting supported
+
+  // 7. Collections - Automatic collection mapping
+  [Facet(typeof(Project))]
+  public partial record ProjectDto;
+
+  [Facet(typeof(User),
+      Include = ["Id", "FirstName", "LastName", "Projects"],
+      NestedFacets = [typeof(ProjectDto)])]
+  public partial record UserWithProjectsDto;
+  // List<Project> -> List<ProjectDto> automatically!
+  // Arrays, ICollection<T>, IEnumerable<T> all supported
+
+  // 8. Everything Combined
+  [Facet(typeof(User),
+      exclude: ["PasswordHash", "Salary", "InternalNotes"],
+      NestedFacets = [typeof(AddressDto), typeof(CompanyDto), typeof(ProjectDto)],
+      CopyAttributes = true)]
+  public partial record UserCompleteDto;
+  // Excludes sensitive fields
+  // Maps nested Address and Company objects
+  // Maps Projects collection (List<Project> -> List<ProjectDto>)
+  // Copies validation attributes
+  // Ready for production APIs
+```
+
+</details>
+
+<details>
+<summary>Basic Projection of Facets</summary>
+
 ```csharp
 [Facet(typeof(User))]
 public partial class UserFacet { }
@@ -135,8 +221,11 @@ var user = userFacet.BackTo<UserFacet, User>(); //Much faster
 var users = users.SelectFacets<UserFacet>();
 var users = users.SelectFacets<User, UserFacet>(); //Much faster
 ```
+</details>
 
-### Custom Sync Mapping
+<details>
+  <summary>Custom Sync Mapping</summary>
+  
 ```csharp
 public class UserMapper : IFacetMapConfiguration<User, UserDto>
 {
@@ -154,8 +243,11 @@ public partial class UserDto
     public int Age { get; set; }
 }
 ```
+</details>
 
-### Async Mapping for I/O Operations
+<details>
+  <summary>Async Mapping for I/O Operations</summary>
+  
 ```csharp
 public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
 {
@@ -173,8 +265,11 @@ public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
 var userDto = await user.ToFacetAsync<User, UserDto, UserAsyncMapper>();
 var userDtos = await users.ToFacetsParallelAsync<User, UserDto, UserAsyncMapper>();
 ```
+</details>
 
-### Async Mapping with Dependency Injection
+<details>
+  <summary>Async Mapping with Dependency Injection</summary>
+  
 ```csharp
 public class UserAsyncMapperWithDI : IFacetMapConfigurationAsyncInstance<User, UserDto>
 {
@@ -200,10 +295,12 @@ var mapper = new UserAsyncMapperWithDI(profileService, reputationService);
 var userDto = await user.ToFacetAsync(mapper);
 var userDtos = await users.ToFacetsParallelAsync(mapper);
 ```
+</details>
 
-### EF Core Integration
+<details>
+  <summary>EF Core Integration</summary>
 
-#### Forward Mapping (Entity -> Facet)
+  #### Forward Mapping (Entity -> Facet)
 ```csharp
 // Async projection directly in EF Core queries
 var userDtos = await dbContext.Users
@@ -244,9 +341,11 @@ if (result.HasChanges)
         user.Id, string.Join(", ", result.ChangedProperties));
 }
 ```
+</details>
 
-### Automatic CRUD DTO Generation
-
+<details>
+  <summary>Automatic CRUD DTO Generation</summary>
+  
 Generate standard Create, Update, Response, Query, and Upsert DTOs automatically:
 
 ```csharp
@@ -305,6 +404,21 @@ public class Schedule
 // - ScheduleResponse (excludes Password, InternalNotes) 
 // - UpsertScheduleRequest (excludes Password, includes InternalNotes)
 ```
+</details>
+
+## :earth_americas: The Facet Ecosystem
+
+Facet is modular and consists of several NuGet packages:
+
+- **[Facet](https://github.com/Tim-Maes/Facet/blob/master/README.md)**: The core source generator. Generates DTOs, projections, and mapping code.
+
+- **[Facet.Extensions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Extensions/README.md)**: Provider-agnostic extension methods for mapping and projecting (works with any LINQ provider, no EF Core dependency).
+
+- **[Facet.Mapping](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Mapping)**: Advanced static mapping configuration support with async capabilities and dependency injection for complex mapping scenarios.
+
+- **[Facet.Mapping.Expressions](https://github.com/Tim-Maes/Facet/blob/master/src/Facet.Mapping.Expressions/README.md)**: Expression tree transformation utilities for transforming predicates, selectors, and business logic between source entities and their Facet projections.
+
+- **[Facet.Extensions.EFCore](https://github.com/Tim-Maes/Facet/tree/master/src/Facet.Extensions.EFCore)**: Async extension methods for Entity Framework Core (requires EF Core 6+).
 
 ## :chart_with_upwards_trend: Performance Benchmarks
 

@@ -10,6 +10,11 @@ Welcome to the Facet documentation! This index will help you navigate all availa
 - [Custom Mapping](04_CustomMapping.md): Custom Mapping with IFacetMapConfiguration & Async Support
 - [Extension Methods](05_Extensions.md): Extension Methods (LINQ, EF Core, etc.)
 - [Advanced Scenarios](06_AdvancedScenarios.md): Advanced Usage Scenarios
+  - Multiple facets from one source
+  - Include/Exclude patterns
+  - Nested Facets (single objects & collections)
+  - Collection support (List, Array, ICollection, IEnumerable)
+  - Inheritance and base classes
 - [What is Being Generated?](07_WhatIsBeingGenerated.md): Before/After Examples
 - [Async Mapping Guide](08_AsyncMapping.md): Asynchronous Mapping with Facet.Mapping
 - [GenerateDtos Attribute](09_GenerateDtosAttribute.md): Auto-generate CRUD DTOs with GenerateDtos & GenerateAuditableDtos
@@ -18,48 +23,3 @@ Welcome to the Facet documentation! This index will help you navigate all availa
 - [Facet.Mapping Reference](../src/Facet.Mapping/README.md): Complete Facet.Mapping Documentation
 - [Facet.Mapping.Expressions Reference](../src/Facet.Mapping.Expressions/README.md): Complete Expression Mapping Documentation
 
-## Quick Reference
-
-### Basic Usage
-```csharp
-[Facet(typeof(User))]
-public partial class UserDto { }
-
-var userDto = user.ToFacet<UserDto>();
-```
-
-### Custom Sync Mapping
-```csharp
-public class UserMapper : IFacetMapConfiguration<User, UserDto>
-{
-    public static void Map(User source, UserDto target)
-    {
-        target.FullName = $"{source.FirstName} {source.LastName}";
-    }
-}
-```
-
-### Async Mapping
-```csharp
-public class UserAsyncMapper : IFacetMapConfigurationAsync<User, UserDto>
-{
-    public static async Task MapAsync(User source, UserDto target, CancellationToken cancellationToken = default)
-    {
-        target.ProfilePicture = await GetProfilePictureAsync(source.Id, cancellationToken);
-    }
-}
-
-var userDto = await user.ToFacetAsync<UserDto, UserAsyncMapper>();
-```
-
-### Expression Mapping
-```csharp
-// Define business logic once for entities
-Expression<Func<User, bool>> activeUsers = u => u.IsActive && !u.IsDeleted;
-
-// Transform to work with DTOs
-Expression<Func<UserDto, bool>> activeDtoUsers = activeUsers.MapToFacet<UserDto>();
-
-// Use with collections
-var filteredDtos = dtoCollection.Where(activeDtoUsers.Compile()).ToList();
-```
